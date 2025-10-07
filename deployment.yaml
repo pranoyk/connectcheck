@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  connectcheck
+  labels:
+    app:  connectcheck
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  connectcheck
+  template:
+    metadata:
+      labels:
+        app:  connectcheck
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name:  connectcheck
+        image:  connectcheck:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        livenessProbe:
+          httpGet:
+            path: /hello
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /hello
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo 'PreStop hook executing, waiting for graceful shutdown...' && sleep 2"]
